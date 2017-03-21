@@ -14,6 +14,7 @@ typedef struct node_s {
 
     /* function only things */
     type_e ret_type;
+    int param_count;
 
     /* procedure only things */
 

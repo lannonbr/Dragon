@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "statement.h"
 #include "tree.h"
 #include "node.h"
 #include "symtable.h"
 
 sym_table_stack_t *top_scope;
 node_t *tmp_nodes;
+tree_list_t *tmp_tree_list;
 %}
 
 %union {
@@ -15,9 +17,11 @@ node_t *tmp_nodes;
     float fval;
     int bopval;
     char* sval;
-    tree_t * tval;
+    tree_t *tval;
     node_t *nval;
     type_e tyval;
+    statement_t *stval;
+    tree_list_t *tlval;
 }
 
 %token <ival> INUM
@@ -46,7 +50,12 @@ node_t *tmp_nodes;
 
 %type <nval> identifier_list
 
+%type <stval> statement
+%type <stval> procedure_statement
+
 %type <nval> variable
+
+%type <tlval> expression_list
 
 %type <tval> expression
 %type <tval> simple_expression
@@ -143,23 +152,37 @@ statement_list: statement
     | statement_list ';' statement
     ;
 
-statement: variable ASSIGNOP expression { printf("[Parser] Assignment\n"); }
-    | procedure_statement
+statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); }
+    | procedure_statement { $$ = $1; }
     | compound_statement
-    | IF expression THEN statement ELSE statement
+    | IF expression THEN statement ELSE statement { $$ = stmt_gen_if_then_else($2, $4, $6); }
     | WHILE expression DO statement
     ;
 
-variable: IDENT { printf("Assign to var\n"); }
+variable: IDENT { $$ = sts_global_search(top_scope, $1); printf("Assign to var\n"); }
     | IDENT '[' expression ']' { printf("Assign to array index\n"); }
     ;
 
-procedure_statement: IDENT
-    | IDENT '(' expression_list ')' { printf("Procedure Call\n"); }
+procedure_statement: IDENT { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), NULL); printf("Procedure call\n"); }
+    | IDENT '(' expression_list ')' { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3); printf("Procedure Call with arguments\n"); }
     ;
 
 expression_list: expression
+    {
+        if(tmp_tree_list == NULL) {
+            tmp_tree_list = create_tree_list($1);
+        } else {
+            tmp_tree_list = tree_list_insert(tmp_tree_list, $1);
+        }
+    }
     | expression_list ',' expression
+    {
+        if(tmp_tree_list == NULL) {
+            tmp_tree_list = create_tree_list($3);
+        } else {
+            tmp_tree_list = tree_list_insert(tmp_tree_list, $3);
+        }
+    }
     ;
 
 expression: simple_expression { print_tree($1, 0); $$ = $1; }
@@ -175,8 +198,8 @@ term: factor { $$ = $1; }
     | term MULOP factor { $$ = gen_binop($2, $1, $3); }
     ;
 
-factor: IDENT { $$ = gen_ident(make_node(0, $1)); }
-    | IDENT '(' expression_list ')' { printf("[Parser] Function Call\n"); $$ = gen_tree(); }
+factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); }
+    | IDENT '(' expression_list ')' { printf("[Parser] Function Call\n"); $$ = gen_tree(); tmp_tree_list = NULL;}
     | IDENT '[' expression ']' { printf("[Parser] Array Access\n"); $$ = gen_tree(); }
     | INUM { $$ = gen_int($1); }
     | RNUM { $$ = gen_real($1); }
@@ -189,6 +212,7 @@ factor: IDENT { $$ = gen_ident(make_node(0, $1)); }
 int main() {
     top_scope = NULL;
     tmp_nodes = NULL;
+    tmp_tree_list = NULL;
 
     yyparse();
 }

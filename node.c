@@ -1,5 +1,6 @@
 #include "node.h"
 #include "tree.h"
+#include "statement.h"
 #include <stdlib.h>
 #include <string.h>
 #include "pascal.tab.h"
@@ -9,7 +10,7 @@ node_t *make_node(int type, char* name) {
 
     newNode->type = type;
     newNode->name = name;
-
+    
     return newNode;
 }
 
@@ -38,6 +39,5 @@ void free_node(node_t *node) {
         return;
     }
 
-    free(node->name);
     free(node);
 }

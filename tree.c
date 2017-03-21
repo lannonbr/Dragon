@@ -147,10 +147,18 @@ void free_tree(tree_t *tree) {
     free(tree);
 }
 
+tree_list_t * create_tree_list(tree_t *tree) {
+    tree_list_t * tree_list = (tree_list_t *) malloc(sizeof(tree_list_t));
+
+    tree_list->head = tree;
+
+    return tree_list;
+}
+
 tree_list_t * tree_list_insert(tree_list_t *tree_list, tree_t *tree) {
     tree_list_t *curr_tree = tree_list;
     while(curr_tree->next != NULL) {
-        curr_tree->tree = curr_tree->next;
+        curr_tree->head = curr_tree->next;
     }
     curr_tree->next = tree;
 
@@ -162,8 +170,8 @@ void free_tree_list(tree_list_t *tree_list) {
     tree_t *tmp;
 
     while(curr_tree->next != NULL) {
-        tmp = curr_tree->tree;
-        curr_tree->tree = curr_tree->next;
+        tmp = curr_tree->head;
+        curr_tree->head = curr_tree->next;
         free_tree(tmp);
     }
 }

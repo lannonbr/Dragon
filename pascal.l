@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "tree.h"
+#include "statement.h"
 #include "pascal.tab.h"
 %}
 

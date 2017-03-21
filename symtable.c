@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "symtable.h"
 
 sym_table_stack_t *create_stack() {
@@ -67,14 +68,16 @@ node_t * sts_global_search(sym_table_stack_t *head, char* name) {
 	node_t * node;
 	sym_table_stack_t *scope = head;
 
-	while(head != NULL) {
+	while(scope != NULL) {
 		node = sts_search(scope, name);
 		if(node != NULL) {
+			printf("Found %s in symbol table\n", node->name);
 			return node;
 		}
 		scope = scope->next;
 	}
-	return NULL;
+	fprintf(stderr, "Error: %s not found in any symbol table\n", name);
+	exit(1);
 }
 
 node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
@@ -82,17 +85,27 @@ node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 
 	node_t *node;
 
+	char* tmp_name;
+
+	if(!strcmp(name, "input")) {
+        tmp_name = "read";
+    } else if(!strcmp(name, "output")) {
+        tmp_name = "write";
+    } else {
+        tmp_name = name;
+    }
+
 	if(head != NULL) {
-		idx = hashpjw(name);
+		idx = hashpjw(tmp_name);
 		
 		node = head->table[idx];
 
-		if(search_node(node, name) == NULL) {
-			head->table[idx] = insert_node(node, type, name, head->var_count);
+		if(search_node(node, tmp_name) == NULL) {
+			head->table[idx] = insert_node(node, type, tmp_name, head->var_count);
 			head->var_count += 1;
 			return head->table[idx];
 		} else {
-			fprintf(stderr, "%s is already in current symbol table\n", name);
+			fprintf(stderr, "%s is already in current symbol table\n", tmp_name);
 			exit(1);
 		}
 	}

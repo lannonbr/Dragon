@@ -17,7 +17,7 @@ typedef struct tree_s {
 } tree_t;
 
 typedef struct tree_list_s {
-    tree_t * tree;
+    tree_t * head;
     tree_t * next;
 } tree_list_t;
 
@@ -34,6 +34,7 @@ void print_binop(tree_t *tree);
 
 void free_tree(tree_t *tree);
 
+tree_list_t * create_tree_list(tree_t *tree);
 tree_list_t * tree_list_insert(tree_list_t *tree_list, tree_t *tree);
 
 void free_tree_list(tree_list_t *tree_list);
