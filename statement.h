@@ -35,4 +35,6 @@ statement_t * stmt_gen_while(tree_t *tree, statement_t *do_stmt);
 
 statement_t * stmt_list_append(statement_t *list, statement_t *statment);
 
+void stmt_list_print(statement_t *list);
+
 #endif

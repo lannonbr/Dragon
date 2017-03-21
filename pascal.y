@@ -10,6 +10,7 @@
 sym_table_stack_t *top_scope;
 node_t *tmp_nodes;
 tree_list_t *tmp_tree_list;
+statement_t *tmp_stmts;
 %}
 
 %union {
@@ -50,6 +51,9 @@ tree_list_t *tmp_tree_list;
 
 %type <nval> identifier_list
 
+%type <stval> compound_statement
+%type <stval> optional_statements
+%type <stval> statement_list
 %type <stval> statement
 %type <stval> procedure_statement
 
@@ -71,7 +75,7 @@ program: PROGRAM
     '(' identifier_list ')' ';' 
     declarations
     subprogram_declarations
-    compound_statement
+    compound_statement { printf("Statement list done\n"); stmt_list_print($10); }
     '.' { top_scope = pop_stack(top_scope); }
     ;
 
@@ -141,22 +145,22 @@ parameter_list: identifier_list ':' type
     | parameter_list ';' identifier_list ':' type
     ;
 
-compound_statement: BBEGIN optional_statements END
+compound_statement: BBEGIN optional_statements END { $$ = $2; }
     ;
 
-optional_statements: statement_list
+optional_statements: statement_list { $$ = $1; }
     | /* empty */
     ;
 
-statement_list: statement
-    | statement_list ';' statement
+statement_list: statement { tmp_stmts = stmt_list_append(tmp_stmts, $1); $$ = tmp_stmts; }
+    | statement_list ';' statement { tmp_stmts = stmt_list_append(tmp_stmts, $3); $$ = tmp_stmts; }
     ;
 
-statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); }
+statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); printf("Gen Assign\n"); }
     | procedure_statement { $$ = $1; }
-    | compound_statement
+    | compound_statement { $$ = $1; }
     | IF expression THEN statement ELSE statement { $$ = stmt_gen_if_then_else($2, $4, $6); }
-    | WHILE expression DO statement
+    | WHILE expression DO statement { $$ = stmt_gen_while($2, $4); }
     ;
 
 variable: IDENT { $$ = sts_global_search(top_scope, $1); printf("Assign to var\n"); }
@@ -213,6 +217,7 @@ int main() {
     top_scope = NULL;
     tmp_nodes = NULL;
     tmp_tree_list = NULL;
+    tmp_stmts = NULL;
 
     yyparse();
 }
