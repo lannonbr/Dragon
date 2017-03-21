@@ -26,18 +26,19 @@
 "else" { return ELSE; }
 "while" { return WHILE; }
 "do" { return DO; }
-"<" { yylval.relopval = 0; return RELOP; }
-">" { yylval.relopval = 1; return RELOP; }
-"<=" { yylval.relopval = 2; return RELOP; }
-">=" { yylval.relopval = 3; return RELOP; }
-"=" { yylval.relopval = 4; return RELOP; }
-"<>" { yylval.relopval = 5; return RELOP; }
-"+" { yylval.addopval = 0; return ADDOP; }
-"-" { yylval.addopval = 1; return ADDOP; }
-"or" { yylval.addopval = 2; return ADDOP; }
-"*" { yylval.addopval = 0; return MULOP; }
-"/" { yylval.addopval = 1; return MULOP; }
-"and" { yylval.addopval = 2; return MULOP; }
+"<" { yylval.bopval = 0; return RELOP; }
+"<=" { yylval.bopval = 1; return RELOP; }
+">" { yylval.bopval = 2; return RELOP; }
+">=" { yylval.bopval = 3; return RELOP; }
+"=" { yylval.bopval = 4; return RELOP; }
+"<>" { yylval.bopval = 5; return RELOP; }
+"+" { yylval.bopval = 6; return ADDOP; }
+"-" { yylval.bopval = 7; return ADDOP; }
+"or" { yylval.bopval = 8; return ADDOP; }
+"*" { yylval.bopval = 9; return MULOP; }
+"/" { yylval.bopval = 10; return MULOP; }
+"%" { yylval.bopval = 11; return MULOP; }
+"and" { yylval.bopval = 12; return MULOP; }
 "not" { return NOT; }
 "." { return '.'; }
 "," { return ','; }

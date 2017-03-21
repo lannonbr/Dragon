@@ -1,0 +1,6 @@
+pascal.output
+*.tab.*
+*.yy.*
+psc
+*.o
+gcc_examples/

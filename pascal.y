@@ -3,16 +3,21 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "tree.h"
+#include "node.h"
+#include "symtable.h"
+
+sym_table_stack_t *top_scope;
+node_t *tmp_nodes;
 %}
 
 %union {
     int ival;
     float fval;
-    int relopval;
-    int addopval;
-    int mulopval;
+    int bopval;
     char* sval;
-    tree_t* tval;
+    tree_t * tval;
+    node_t *nval;
+    type_e tyval;
 }
 
 %token <ival> INUM
@@ -31,43 +36,81 @@
 %token IF THEN ELSE
 %token WHILE
 %token NOT
-%token <relopval> RELOP
-%token <addopval> ADDOP
-%token <mulopval> MULOP
+%token <bopval> RELOP
+%token <bopval> ADDOP
+%token <bopval> MULOP
 %token DOTDOT
+
+%type <tyval> type
+%type <tyval> standard_type
+
+%type <nval> identifier_list
+
+%type <nval> variable
 
 %type <tval> expression
 %type <tval> simple_expression
 %type <tval> term
 %type <tval> factor
 
-"%define error-verbose"
-
 %%
 
 start: program;
 
-program: PROGRAM IDENT '(' identifier_list ')' ';'
+program: PROGRAM
+    IDENT { top_scope = push_stack(top_scope, $2); }
+    '(' identifier_list ')' ';' 
     declarations
     subprogram_declarations
     compound_statement
-    '.'
+    '.' { top_scope = pop_stack(top_scope); }
     ;
 
 identifier_list: IDENT
-    | identifier_list ',' IDENT
+    { 
+        printf("Inserting %s into symbol table scope %s\n", $1, top_scope->name);
+        
+        node_t * node = sts_insert(top_scope, 0, $1);
+        node_t * tmp = tmp_nodes;
+        tmp_nodes=node;
+        tmp_nodes->next = tmp;
+
+        printf("This scope now has %d variables\n", top_scope->var_count);
+
+        $$ = tmp_nodes;
+    }
+    | identifier_list ',' IDENT 
+    {
+        printf("Inserting %s into symbol table scope %s\n", $3, top_scope->name);
+        node_t * node = sts_insert(top_scope, 0, $3);
+        node_t * tmp = tmp_nodes;
+        tmp_nodes=node;
+        tmp_nodes->next = tmp;
+
+        printf("This scope now has %d variables\n", top_scope->var_count);
+
+        $$ = tmp_nodes;
+    }
     ;
 
-declarations: declarations VAR identifier_list ':' type ';' { /* do stuff */ }
+declarations: declarations VAR identifier_list ':' type ';'
+    {
+        node_t * node = tmp_nodes;
+        while(node != NULL) {
+            node->var_type = $5;
+            node = node->next;
+        }
+    }
     | /* empty */
     ;
 
-type: standard_type
-    | ARRAY '[' ADDOP INUM DOTDOT INUM ']' OF standard_type
+/* TODO: Pass size of Array up to declarations field */
+type: standard_type { $$ = $1; }
+    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type { $$ = ($8 == T_REAL) ? T_ARR_REAL : T_ARR_INT; }
     ;
 
-standard_type: INTEGER
-    | REAL
+standard_type: INTEGER { $$ = T_INT; }
+    | REAL { $$ = T_REAL; }
     ;
 
 subprogram_declarations: subprogram_declarations subprogram_declaration ';'
@@ -100,26 +143,26 @@ statement_list: statement
     | statement_list ';' statement
     ;
 
-statement: variable ASSIGNOP expression { printf("Assignment\n"); }
+statement: variable ASSIGNOP expression { printf("[Parser] Assignment\n"); }
     | procedure_statement
     | compound_statement
     | IF expression THEN statement ELSE statement
     | WHILE expression DO statement
     ;
 
-variable: IDENT
-    | IDENT '[' expression ']'
+variable: IDENT { printf("Assign to var\n"); }
+    | IDENT '[' expression ']' { printf("Assign to array index\n"); }
     ;
 
 procedure_statement: IDENT
-    | IDENT '(' expression_list ')'
+    | IDENT '(' expression_list ')' { printf("Procedure Call\n"); }
     ;
 
 expression_list: expression
     | expression_list ',' expression
     ;
 
-expression: simple_expression { print_tree($1); $$ = $1; }
+expression: simple_expression { print_tree($1, 0); $$ = $1; }
     | simple_expression RELOP simple_expression { $$ = gen_binop($2, $1, $3); }
     ;
 
@@ -132,9 +175,9 @@ term: factor { $$ = $1; }
     | term MULOP factor { $$ = gen_binop($2, $1, $3); }
     ;
 
-factor: IDENT { $$ = gen_tree(); }
-    | IDENT '(' expression_list ')' { $$ = gen_tree(); }
-    | IDENT '[' expression ']' { $$ = gen_tree(); }
+factor: IDENT { $$ = gen_ident(make_node(0, $1)); }
+    | IDENT '(' expression_list ')' { printf("[Parser] Function Call\n"); $$ = gen_tree(); }
+    | IDENT '[' expression ']' { printf("[Parser] Array Access\n"); $$ = gen_tree(); }
     | INUM { $$ = gen_int($1); }
     | RNUM { $$ = gen_real($1); }
     | '(' expression ')' { $$ = $2; }
@@ -144,5 +187,8 @@ factor: IDENT { $$ = gen_tree(); }
 %%
 
 int main() {
+    top_scope = NULL;
+    tmp_nodes = NULL;
+
     yyparse();
 }
