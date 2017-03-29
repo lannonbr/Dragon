@@ -2,15 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "util.h"
 #include "statement.h"
 #include "tree.h"
 #include "node.h"
 #include "symtable.h"
+#include "stmtstack.h"
 
 sym_table_stack_t *top_scope;
 node_t *tmp_nodes;
 tree_list_t *tmp_tree_list;
-statement_t *tmp_stmts;
+stmt_stack_t *stmt_top_scope;
+int stmt_scope_id;
 %}
 
 %union {
@@ -75,32 +78,25 @@ program: PROGRAM
     '(' identifier_list ')' ';' 
     declarations
     subprogram_declarations
-    compound_statement { printf("Statement list done\n"); stmt_list_print($10); }
+    compound_statement { printf("STATEMENT LIST\n"); stmt_list_print($10, 0); }
     '.' { top_scope = pop_stack(top_scope); }
     ;
 
 identifier_list: IDENT
     { 
-        printf("Inserting %s into symbol table scope %s\n", $1, top_scope->name);
-        
         node_t * node = sts_insert(top_scope, 0, $1);
         node_t * tmp = tmp_nodes;
         tmp_nodes=node;
         tmp_nodes->next = tmp;
 
-        printf("This scope now has %d variables\n", top_scope->var_count);
-
         $$ = tmp_nodes;
     }
     | identifier_list ',' IDENT 
     {
-        printf("Inserting %s into symbol table scope %s\n", $3, top_scope->name);
         node_t * node = sts_insert(top_scope, 0, $3);
         node_t * tmp = tmp_nodes;
         tmp_nodes=node;
         tmp_nodes->next = tmp;
-
-        printf("This scope now has %d variables\n", top_scope->var_count);
 
         $$ = tmp_nodes;
     }
@@ -145,51 +141,65 @@ parameter_list: identifier_list ':' type
     | parameter_list ';' identifier_list ':' type
     ;
 
-compound_statement: BBEGIN optional_statements END { $$ = $2; }
+compound_statement: BBEGIN
+    {
+        stmt_scope_id++;
+        stmt_top_scope = stmt_push_stack(stmt_scope_id, stmt_top_scope);
+    }
+    optional_statements
+    END
+    {
+        stmt_scope_id--;
+        $$ = stmt_pop_stack(stmt_top_scope);
+    }
     ;
 
-optional_statements: statement_list { $$ = $1; }
+optional_statements: statement_list
     | /* empty */
     ;
 
-statement_list: statement { tmp_stmts = stmt_list_append(tmp_stmts, $1); $$ = tmp_stmts; }
-    | statement_list ';' statement { tmp_stmts = stmt_list_append(tmp_stmts, $3); $$ = tmp_stmts; }
+statement_list: statement { stmt_top_scope->head = stmt_list_append(stmt_top_scope->head, $1); }
+    | statement_list ';' statement { stmt_top_scope->head = stmt_list_append(stmt_top_scope->head, $3); }
     ;
 
-statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); printf("Gen Assign\n"); }
+statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); }
     | procedure_statement { $$ = $1; }
     | compound_statement { $$ = $1; }
     | IF expression THEN statement ELSE statement { $$ = stmt_gen_if_then_else($2, $4, $6); }
     | WHILE expression DO statement { $$ = stmt_gen_while($2, $4); }
     ;
 
-variable: IDENT { $$ = sts_global_search(top_scope, $1); printf("Assign to var\n"); }
+variable: IDENT { $$ = sts_global_search(top_scope, $1); /* printf("Assign to var\n"); */ }
     | IDENT '[' expression ']' { printf("Assign to array index\n"); }
     ;
 
-procedure_statement: IDENT { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), NULL); printf("Procedure call\n"); }
-    | IDENT '(' expression_list ')' { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3); printf("Procedure Call with arguments\n"); }
+procedure_statement: IDENT { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), NULL); }
+    | IDENT '(' expression_list ')' { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3); tmp_tree_list = NULL; }
     ;
 
 expression_list: expression
     {
         if(tmp_tree_list == NULL) {
             tmp_tree_list = create_tree_list($1);
+	    $$ = tmp_tree_list;
         } else {
             tmp_tree_list = tree_list_insert(tmp_tree_list, $1);
+	    $$ = tmp_tree_list;
         }
     }
     | expression_list ',' expression
     {
         if(tmp_tree_list == NULL) {
             tmp_tree_list = create_tree_list($3);
+	    $$ = tmp_tree_list;
         } else {
             tmp_tree_list = tree_list_insert(tmp_tree_list, $3);
+	    $$ = tmp_tree_list;
         }
     }
     ;
 
-expression: simple_expression { print_tree($1, 0); $$ = $1; }
+expression: simple_expression { $$ = $1; }
     | simple_expression RELOP simple_expression { $$ = gen_binop($2, $1, $3); }
     ;
 
@@ -217,7 +227,8 @@ int main() {
     top_scope = NULL;
     tmp_nodes = NULL;
     tmp_tree_list = NULL;
-    tmp_stmts = NULL;
-
+    stmt_top_scope = NULL;
+    stmt_scope_id = 0;
+    
     yyparse();
 }

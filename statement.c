@@ -4,6 +4,7 @@
 #include "tree.h"
 #include "node.h"
 #include "enums.h"
+#include "util.h"
 
 statement_t * stmt_gen_assign(node_t *ident, tree_t *tree) {
     statement_t * stmt = (statement_t *) malloc(sizeof(statement_t));
@@ -47,38 +48,71 @@ statement_t * stmt_gen_while(tree_t *tree, statement_t *do_stmt) {
 }
 
 statement_t * stmt_list_append(statement_t *list, statement_t *statement) {
-    statement_t * curr_stmt = list;
-    statement_t * head = list;
-    
-    if(curr_stmt != NULL) {
-        while(curr_stmt->next != NULL) {
-            curr_stmt = curr_stmt->next;
-        }
-        curr_stmt->next = statement;
+    statement_t *stmt = list;
+    statement_t *head = list;
+
+    if(stmt == NULL) {
+        stmt = statement;
+        return stmt;
     } else {
-        head = curr_stmt = statement;
+        while(stmt->next != NULL)
+            stmt = stmt->next;
+        stmt->next = statement;
+        return head;
     }
-    
-    return head;
 }
 
-void stmt_list_print(statement_t *list) {
+void stmt_list_print(statement_t *list, int offset) {
+    print_spaces(offset);
     switch(list->type) {
         case ST_ASSIGN:
-            printf("[Statement]: ASSIGN\n");
+            printf("[Statement]: ASSIGN %s = %d\n", list->stmt.assign_stmt.ident->name, list->stmt.assign_stmt.tree->attribute.ival);
             break;
         case ST_PROC:
-            printf("[Statement]: PROCEDURE\n");
+            printf("[Statement]: PROCEDURE %s\n", list->stmt.proc_stmt.ident->name);
             break;
         case ST_IFTHENELSE:
             printf("[Statement]: IFTHENELSE\n");
-            stmt_list_print(list->stmt.if_then_else_stmt.if_stmt);
-            stmt_list_print(list->stmt.if_then_else_stmt.else_stmt);
+	    printf("If Stmt:\n");
+            stmt_list_print(list->stmt.if_then_else_stmt.if_stmt, offset+4);
+	    printf("Else Stmt:\n");
+            stmt_list_print(list->stmt.if_then_else_stmt.else_stmt, offset+4);
             break;
         case ST_WHILE:
             printf("[Statement]: WHILE\n");
+	    printf("Do Stmt:\n");
+            stmt_list_print(list->stmt.while_stmt.do_stmt, offset+4);
+            break;
+        default:
+            printf("[Statement]: WAT\n%p", list);
             break;
     }
     if(list->next != NULL)
-        stmt_list_print(list->next);
+        stmt_list_print(list->next, offset);
+}
+
+void print_stmt_add(statement_t *stmt) {
+    switch(stmt->type) {
+        case ST_ASSIGN:
+            printf("Assignment added\n");
+            printf("\t%s = %d\n", stmt->stmt.assign_stmt.ident->name, stmt->stmt.assign_stmt.tree->attribute.ival);
+            break;
+        case ST_IFTHENELSE:
+            printf("If-Then-Else added\n");
+            printf("\tIF: ");
+            print_stmt_add(stmt->stmt.if_then_else_stmt.if_stmt);
+            printf("\tElse: ");
+            print_stmt_add(stmt->stmt.if_then_else_stmt.else_stmt);
+            break;
+	case ST_WHILE:
+	    printf("While added\n");
+	    print_stmt_add(stmt->stmt.while_stmt.do_stmt);
+	    break;
+        case ST_PROC:
+            printf("Procedure added\n");
+            break;
+    }
+    if(stmt->next != NULL) {
+        print_stmt_add(stmt->next);
+    }
 }

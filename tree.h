@@ -1,5 +1,6 @@
 #include "node.h"
 #include "enums.h"
+#include "util.h"
 
 #ifndef TREE_H
 #define TREE_H
@@ -28,7 +29,6 @@ tree_t * gen_real(float fval);
 tree_t * gen_binop(binop opval, tree_t *left, tree_t *right);
 tree_t * gen_unaryop(unaryop opval, tree_t *left);
 
-void print_spaces(int offset);
 void print_tree(tree_t *tree, int offset);
 void print_binop(tree_t *tree);
 

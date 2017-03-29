@@ -71,7 +71,7 @@ node_t * sts_global_search(sym_table_stack_t *head, char* name) {
 	while(scope != NULL) {
 		node = sts_search(scope, name);
 		if(node != NULL) {
-			printf("Found %s in symbol table\n", node->name);
+			// printf("Found %s in symbol table\n", node->name);
 			return node;
 		}
 		scope = scope->next;

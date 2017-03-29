@@ -1,10 +1,16 @@
 program main(input, output);
-    var x, y: integer;
+    var x : integer;
 begin
-    x := 12;
-    if (x = 7) then
-        y := 4 / 3 + 2
+    x := 2; { Gen an assign }
+    if x = 4 then { Gen another assign }
+    begin
+        x := 10; { assign }
+        x := 20; { assign }
+        x := 30; { assign }
+        write(40); { proc call with expr list of len 1 }
+        write(x, x) { proc call with expr list of len 1 }
+    end
     else
-        y := 10;
-    write( y )
+        x := 7; { assign }
+    write(x)
 end.

@@ -6,7 +6,9 @@
 
 typedef struct statement_s {
     state_type_e type;
+    int depth;
     struct statement_s *next;
+    struct statement_s *next_depth;
     union {
         struct {
             node_t * ident;
@@ -35,6 +37,7 @@ statement_t * stmt_gen_while(tree_t *tree, statement_t *do_stmt);
 
 statement_t * stmt_list_append(statement_t *list, statement_t *statment);
 
-void stmt_list_print(statement_t *list);
+void stmt_list_print(statement_t *list, int offset);
+void print_stmt_add(statement_t *stmt);
 
 #endif

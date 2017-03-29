@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "node.h"
 #include "tree.h"
+#include "util.h"
 
 tree_t * gen_tree() {
     tree_t * new_tree = (tree_t *) malloc(sizeof(tree_t));
@@ -45,12 +46,6 @@ tree_t * gen_unaryop(unaryop opval, tree_t *left) {
     new_tree->attribute.uopval = opval;
     new_tree->left = left;
     return new_tree;
-}
-
-void print_spaces(int offset) {
-    for(int i = 0; i < offset; i++) {
-    	printf(" ");
-    }
 }
 
 void print_tree(tree_t * tree, int offset) {
