@@ -78,7 +78,13 @@ program: PROGRAM
     '(' identifier_list ')' ';' 
     declarations
     subprogram_declarations
-    compound_statement { printf("STATEMENT LIST\n"); stmt_list_print($10, 0); }
+    compound_statement
+    {
+        stmt_list_print($10, 0);
+        gen_code_main_preamble();
+        gen_code_stmt_list($10);
+        gen_code_main_ending();
+    }
     '.' { top_scope = pop_stack(top_scope); }
     ;
 

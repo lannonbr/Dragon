@@ -22,7 +22,6 @@ sym_table_stack_t *pop_stack(sym_table_stack_t *head) {
 	sym_table_stack_t *temp_stack;
 
 	if(head != NULL) {
-		printf("Popping stack: %s\n", head->name);
 		temp_stack = head;
 		head = head->next;
 
@@ -44,8 +43,6 @@ sym_table_stack_t *push_stack(sym_table_stack_t *head, char* name) {
 
 	new_stack->next = head;
 	new_stack->name = name;
-
-	printf("Pushing stack: %s\n", new_stack->name);
 
 	return new_stack;
 }
