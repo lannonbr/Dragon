@@ -3,4 +3,3 @@ pascal.output
 *.yy.*
 psc
 *.o
-gcc_examples/
