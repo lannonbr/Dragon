@@ -14,6 +14,7 @@ node_t *tmp_nodes;
 tree_list_t *tmp_tree_list;
 stmt_stack_t *stmt_top_scope;
 int stmt_scope_id;
+int num_registers;
 %}
 
 %union {
@@ -80,7 +81,7 @@ program: PROGRAM
     subprogram_declarations
     compound_statement
     {
-        stmt_list_print($10, 0);
+        // stmt_list_print($10, 0);
         gen_code_main_preamble();
         gen_code_stmt_list($10);
         gen_code_main_ending();
@@ -168,7 +169,7 @@ statement_list: statement { stmt_top_scope->head = stmt_list_append(stmt_top_sco
     | statement_list ';' statement { stmt_top_scope->head = stmt_list_append(stmt_top_scope->head, $3); }
     ;
 
-statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); }
+statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); $3->assign_to_node=$1; }
     | procedure_statement { $$ = $1; }
     | compound_statement { $$ = $1; }
     | IF expression THEN statement ELSE statement { $$ = stmt_gen_if_then_else($2, $4, $6); }
@@ -206,23 +207,23 @@ expression_list: expression
     ;
 
 expression: simple_expression { $$ = $1; }
-    | simple_expression RELOP simple_expression { $$ = gen_binop($2, $1, $3); }
+    | simple_expression RELOP simple_expression { $$ = gen_binop($2, $1, $3); $1->leaf = 0; $3->leaf = 0; $1->side = S_LEFT; $3->side = S_RIGHT; }
     ;
 
 simple_expression: term { $$ = $1; }
     | ADDOP term { $$ = gen_unaryop($1, $2); }
-    | simple_expression ADDOP term { $$ = gen_binop($2, $1, $3); }
+    | simple_expression ADDOP term { $$ = gen_binop($2, $1, $3); $1->leaf = 0; $3->leaf = 0; $1->side = S_LEFT; $3->side = S_RIGHT; }
     ;
 
 term: factor { $$ = $1; }
-    | term MULOP factor { $$ = gen_binop($2, $1, $3); }
+    | term MULOP factor { $$ = gen_binop($2, $1, $3); $1->leaf = 0; $3->leaf = 0; $1->side = S_LEFT; $3->side = S_RIGHT; }
     ;
 
 factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); }
     | IDENT '(' expression_list ')' { printf("[Parser] Function Call\n"); $$ = gen_tree(); tmp_tree_list = NULL;}
     | IDENT '[' expression ']' { printf("[Parser] Array Access\n"); $$ = gen_tree(); }
-    | INUM { $$ = gen_int($1); }
-    | RNUM { $$ = gen_real($1); }
+    | INUM { $$ = gen_int($1); $$->leaf = 1; $$->side = S_LEFT; }
+    | RNUM { $$ = gen_real($1); $$->leaf = 1; $$->side = S_LEFT; }
     | '(' expression ')' { $$ = $2; }
     | NOT factor { $$ = gen_tree(); }
     ;
@@ -235,6 +236,7 @@ int main() {
     tmp_tree_list = NULL;
     stmt_top_scope = NULL;
     stmt_scope_id = 0;
+	num_registers = 8;
     
     yyparse();
 }

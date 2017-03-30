@@ -40,4 +40,9 @@ typedef enum {
 	ST_WHILE = 3
 } state_type_e;
 
+typedef enum {
+	S_LEFT = 0,
+	S_RIGHT = 1
+} side_e;
+
 #endif

@@ -7,6 +7,9 @@
 
 typedef struct tree_s {
 	type_e type;
+	int leaf;
+	side_e side;
+	int label;
 	union {
 		int ival;
 		float fval;
