@@ -7,13 +7,13 @@
 #define EOS '\0'
 
 typedef struct table_stack_s {
-    node_t *table[HASH_SIZE]; // The symbol table itself
-    char* name; // table_name
-    struct table_stack_s *next;
-    
-    int var_count;
-    
-    struct table_stack_s *static_parent; // The static parent scope
+	node_t *table[HASH_SIZE]; // The symbol table itself
+	char* name; // table_name
+	struct table_stack_s *next;
+
+	int var_count;
+
+	struct table_stack_s *static_parent; // The static parent scope
 } sym_table_stack_t;
 
 sym_table_stack_t *create_stack();

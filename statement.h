@@ -5,29 +5,29 @@
 #include "node.h"
 
 typedef struct statement_s {
-    state_type_e type;
-    int depth;
-    struct statement_s *next;
-    struct statement_s *next_depth;
-    union {
-        struct {
-            node_t * ident;
-            tree_t * tree;
-        } assign_stmt;
-        struct {
-            node_t * ident;
-            tree_list_t * proc_expr_list;
-        } proc_stmt;
-        struct {
-            tree_t * tree;
-            struct statement_s * if_stmt;
-            struct statement_s * else_stmt;
-        } if_then_else_stmt;
-        struct {
-            tree_t * tree;
-            struct statement_s * do_stmt;
-        } while_stmt;
-    } stmt;
+	state_type_e type;
+	int depth;
+	struct statement_s *next;
+	struct statement_s *next_depth;
+	union {
+		struct {
+			node_t * ident;
+			tree_t * tree;
+		} assign_stmt;
+		struct {
+			node_t * ident;
+			tree_list_t * proc_expr_list;
+		} proc_stmt;
+		struct {
+			tree_t * tree;
+			struct statement_s * if_stmt;
+			struct statement_s * else_stmt;
+		} if_then_else_stmt;
+		struct {
+			tree_t * tree;
+			struct statement_s * do_stmt;
+		} while_stmt;
+	} stmt;
 } statement_t;
 
 statement_t * stmt_gen_assign(node_t *ident, tree_t *tree);

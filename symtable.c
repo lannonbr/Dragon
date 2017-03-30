@@ -7,7 +7,7 @@
 sym_table_stack_t *create_stack() {
 	int i;
 	sym_table_stack_t * stack = (sym_table_stack_t*) malloc(sizeof(sym_table_stack_t));
-	
+
 	stack->var_count = 0;
 
 	for(int i = 0; i < HASH_SIZE; i++) {
@@ -90,16 +90,16 @@ node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 
 	// Handle the translations between input->read and output->write
 	if(!strcmp(name, "input")) {
-        tmp_name = "read";
-    } else if(!strcmp(name, "output")) {
-        tmp_name = "write";
-    } else {
-        tmp_name = name;
-    }
+		tmp_name = "read";
+	} else if(!strcmp(name, "output")) {
+		tmp_name = "write";
+	} else {
+		tmp_name = name;
+	}
 
 	if(head != NULL) {
 		idx = hashpjw(tmp_name);
-		
+
 		node = head->table[idx];
 
 		// Insert only if the node doesn't already exist in the current scope
@@ -117,12 +117,12 @@ node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 }
 
 void free_sts(sym_table_stack_t *head) {
-    for(int i = 0; i < HASH_SIZE; i++) {
+	for(int i = 0; i < HASH_SIZE; i++) {
 		// printf("%p\t%p\n", head, head->table[i]);
-        free_node(head->table[i]);
-    }
-    if(head->next != NULL)
-        free_sts(head->next);
+		free_node(head->table[i]);
+	}
+	if(head->next != NULL)
+		free_sts(head->next);
 }
 
 // The hashpjw algorithm from the Dragon book
@@ -130,7 +130,7 @@ int hashpjw( char *s )
 {
 	char *p; 
 	unsigned h = 0, g; 
-	
+
 	for ( p = s; *p != EOS; p++ ) 
 	{ 
 		h = (h << 4) + (*p); 

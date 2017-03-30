@@ -4,9 +4,9 @@
 #define STMTSTACK_H
 
 typedef struct stmtstck_s {
-    statement_t * head;
-    struct stmtstck_s * next;
-    int id;
+	statement_t * head;
+	struct stmtstck_s * next;
+	int id;
 } stmt_stack_t;
 
 stmt_stack_t * new_stmt_stack();

@@ -4,21 +4,21 @@
 #include "enums.h"
 
 typedef struct node_s {
-    char *name;
-    int type; /* variable, function, procedure */
+	char *name;
+	int type; /* variable, function, procedure */
 
-    /* variable only things */
-    int offset;
-    type_e var_type;
-    int arr_size;
+	/* variable only things */
+	int offset;
+	type_e var_type;
+	int arr_size;
 
-    /* function only things */
-    type_e ret_type;
-    int param_count;
+	/* function only things */
+	type_e ret_type;
+	int param_count;
 
-    /* procedure only things */
+	/* procedure only things */
 
-    struct node_s *next;
+	struct node_s *next;
 } node_t;
 
 node_t *make_node(int type, char *name);

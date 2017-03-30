@@ -6,20 +6,20 @@
 #define TREE_H
 
 typedef struct tree_s {
-    type_e type;
-    union {
-        int ival;
-        float fval;
-        node_t *sval;
-        binop bopval;
-        unaryop uopval;
-    } attribute;
-    struct tree_s *left, *right;
+	type_e type;
+	union {
+		int ival;
+		float fval;
+		node_t *sval;
+		binop bopval;
+		unaryop uopval;
+	} attribute;
+	struct tree_s *left, *right;
 } tree_t;
 
 typedef struct tree_list_s {
-    tree_t * head;
-    tree_t * next;
+	tree_t * head;
+	tree_t * next;
 } tree_list_t;
 
 tree_t * gen_tree();
