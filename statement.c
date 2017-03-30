@@ -63,6 +63,7 @@ statement_t * stmt_list_append(statement_t *list, statement_t *statement) {
 }
 
 void stmt_list_print(statement_t *list, int offset) {
+    if(list == NULL) return;
     print_spaces(offset);
     switch(list->type) {
         case ST_ASSIGN:
