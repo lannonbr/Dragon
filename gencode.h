@@ -13,4 +13,6 @@ void gen_code_stmt_list(statement_t *list);
 void gen_code_expr(tree_t *tree);
 void gen_code_write(tree_list_t *expr_list);
 
+char* get_val(tree_t *tree);
+
 #endif

@@ -90,7 +90,7 @@ void gen_code_expr(tree_t *tree) {
 	// GENCODE Algorithm from class
 	if(tree->leaf && tree->side == S_LEFT) {
 		// CASE 0
-		printf("\tmovq\t$%d, %s\n", tree->attribute.ival, "%rax");
+		printf("\tmovq\t%s, %s\n", get_val(tree), "%rax");
 	} else if(tree->right->leaf) {
 		// CASE 1
 	} else if(tree->right->label > tree->left->label && num_registers > tree->left->label) {
@@ -122,4 +122,19 @@ void gen_code_write(tree_list_t *expr_list) {
 	// Push string into register
 
 	// Call printf
+}
+
+char* get_val(tree_t *tree) {
+	char str[50];
+	
+	switch(tree->type) {
+		case T_INT: 
+			sprintf(str, "$%d", tree->attribute.ival);
+			break;
+		case T_ID:
+			sprintf(str, "%d(%%rbp)", -4*(tree->attribute.sval->offset));
+			break;
+	}
+
+	return str;
 }

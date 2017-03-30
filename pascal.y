@@ -169,7 +169,7 @@ statement_list: statement { stmt_top_scope->head = stmt_list_append(stmt_top_sco
     | statement_list ';' statement { stmt_top_scope->head = stmt_list_append(stmt_top_scope->head, $3); }
     ;
 
-statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); $3->assign_to_node=$1; }
+statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); }
     | procedure_statement { $$ = $1; }
     | compound_statement { $$ = $1; }
     | IF expression THEN statement ELSE statement { $$ = stmt_gen_if_then_else($2, $4, $6); }
@@ -219,7 +219,7 @@ term: factor { $$ = $1; }
     | term MULOP factor { $$ = gen_binop($2, $1, $3); $1->leaf = 0; $3->leaf = 0; $1->side = S_LEFT; $3->side = S_RIGHT; }
     ;
 
-factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); }
+factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); $$->side = S_LEFT; $$->leaf = 1; }
     | IDENT '(' expression_list ')' { printf("[Parser] Function Call\n"); $$ = gen_tree(); tmp_tree_list = NULL;}
     | IDENT '[' expression ']' { printf("[Parser] Array Access\n"); $$ = gen_tree(); }
     | INUM { $$ = gen_int($1); $$->leaf = 1; $$->side = S_LEFT; }

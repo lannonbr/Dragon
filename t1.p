@@ -1,5 +1,5 @@
 program main(input, output);
         var a: integer;
 begin
-        a := 10
+        a := 104
 end.
