@@ -3,6 +3,7 @@
 #include <string.h>
 #include "symtable.h"
 
+// Generate a new scope to the symbol table stack
 sym_table_stack_t *create_stack() {
 	int i;
 	sym_table_stack_t * stack = (sym_table_stack_t*) malloc(sizeof(sym_table_stack_t));
@@ -47,6 +48,7 @@ sym_table_stack_t *push_stack(sym_table_stack_t *head, char* name) {
 	return new_stack;
 }
 
+// Search for a node within a single scope
 node_t * sts_search(sym_table_stack_t *head, char* name) {
 	int idx;
 	node_t *node;
@@ -61,6 +63,7 @@ node_t * sts_search(sym_table_stack_t *head, char* name) {
 	return NULL;
 }
 
+// Search for a node through all scopes going top-down
 node_t * sts_global_search(sym_table_stack_t *head, char* name) {
 	node_t * node;
 	sym_table_stack_t *scope = head;
@@ -77,6 +80,7 @@ node_t * sts_global_search(sym_table_stack_t *head, char* name) {
 	exit(1);
 }
 
+// Insert a node into the top scope
 node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 	int idx;
 
@@ -84,6 +88,7 @@ node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 
 	char* tmp_name;
 
+	// Handle the translations between input->read and output->write
 	if(!strcmp(name, "input")) {
         tmp_name = "read";
     } else if(!strcmp(name, "output")) {
@@ -97,6 +102,7 @@ node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 		
 		node = head->table[idx];
 
+		// Insert only if the node doesn't already exist in the current scope
 		if(search_node(node, tmp_name) == NULL) {
 			head->table[idx] = insert_node(node, type, tmp_name, head->var_count);
 			head->var_count += 1;
@@ -119,6 +125,7 @@ void free_sts(sym_table_stack_t *head) {
         free_sts(head->next);
 }
 
+// The hashpjw algorithm from the Dragon book
 int hashpjw( char *s )
 {
 	char *p; 

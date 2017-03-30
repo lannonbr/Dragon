@@ -48,13 +48,16 @@ statement_t * stmt_gen_while(tree_t *tree, statement_t *do_stmt) {
 }
 
 statement_t * stmt_list_append(statement_t *list, statement_t *statement) {
+	// Setup local vars
     statement_t *stmt = list;
     statement_t *head = list;
 
+	// if the current list is empty, set it to the new statement
     if(stmt == NULL) {
         stmt = statement;
         return stmt;
     } else {
+		// Run to the end of list and then append the new statement to it
         while(stmt->next != NULL)
             stmt = stmt->next;
         stmt->next = statement;
@@ -62,9 +65,17 @@ statement_t * stmt_list_append(statement_t *list, statement_t *statement) {
     }
 }
 
+// Debugging function to view the statement list and it's contents
 void stmt_list_print(statement_t *list, int offset) {
-    if(list == NULL) return;
+	// If the list is empty, return
+    if(list == NULL)
+		return;
+
+	// print spaces to align things for recursive calls
     print_spaces(offset);
+
+	// Switch on type and print some information about the statement itself
+	// and then call the inner statements
     switch(list->type) {
         case ST_ASSIGN:
             printf("[Statement]: ASSIGN %s = %d\n", list->stmt.assign_stmt.ident->name, list->stmt.assign_stmt.tree->attribute.ival);
@@ -88,10 +99,13 @@ void stmt_list_print(statement_t *list, int offset) {
             printf("[Statement]: WAT\n%p", list);
             break;
     }
+
+	// If there's another statement in the list, continue
     if(list->next != NULL)
         stmt_list_print(list->next, offset);
 }
 
+// Like stmt_list_print, but when it is being added to the list
 void print_stmt_add(statement_t *stmt) {
     switch(stmt->type) {
         case ST_ASSIGN:
@@ -113,7 +127,7 @@ void print_stmt_add(statement_t *stmt) {
             printf("Procedure added\n");
             break;
     }
-    if(stmt->next != NULL) {
+
+    if(stmt->next != NULL)
         print_stmt_add(stmt->next);
-    }
 }

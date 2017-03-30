@@ -48,14 +48,13 @@ tree_t * gen_unaryop(unaryop opval, tree_t *left) {
     return new_tree;
 }
 
+// Print out the tree for debugging purposes
 void print_tree(tree_t * tree, int offset) {
-
-    if(tree == NULL) {
+    if(tree == NULL)
         return;
-    }
 
     print_spaces(offset);
-    printf("Tree ");
+
     switch(tree->type) {
         case T_BINOP:
             printf("BINOP: ");
@@ -84,12 +83,11 @@ void print_tree(tree_t * tree, int offset) {
             break;
     }
 
-    if(tree->left != NULL) {
+    if(tree->left != NULL)
         print_tree(tree->left, offset+4);
-    }
-    if(tree->right != NULL) {
+
+    if(tree->right != NULL)
         print_tree(tree->right, offset+4);
-    }
 }
 
 void print_binop(tree_t * tree) {
@@ -152,9 +150,10 @@ tree_list_t * create_tree_list(tree_t *tree) {
 
 tree_list_t * tree_list_insert(tree_list_t *tree_list, tree_t *tree) {
     tree_list_t *curr_tree = tree_list;
-    while(curr_tree->next != NULL) {
+
+    while(curr_tree->next != NULL)
         curr_tree->head = curr_tree->next;
-    }
+
     curr_tree->next = tree;
 
     return curr_tree;

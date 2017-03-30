@@ -14,6 +14,7 @@ node_t *make_node(int type, char* name) {
     return newNode;
 }
 
+// Add a node to the front of a node_list
 node_t *insert_node(node_t * head, int type, char* name, int offset) {
     node_t * node = make_node(type, name);
     node->next = head;
@@ -21,6 +22,7 @@ node_t *insert_node(node_t * head, int type, char* name, int offset) {
     return node;
 }
 
+// Search a node list for a node with a particular string
 node_t *search_node(node_t * head, char* name) {
     node_t* node = head;
 
@@ -35,9 +37,8 @@ node_t *search_node(node_t * head, char* name) {
 }
 
 void free_node(node_t *node) {
-    if(node == NULL) {
+    if(node == NULL)
         return;
-    }
 
     free(node);
 }
