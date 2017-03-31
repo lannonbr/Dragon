@@ -82,6 +82,7 @@ program: PROGRAM
     compound_statement
     {
         // stmt_list_print($10, 0);
+		gen_code_io_strings();
         gen_code_main_preamble();
         gen_code_stmt_list($10);
         gen_code_main_ending();

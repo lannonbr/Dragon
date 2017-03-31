@@ -1,5 +1,7 @@
 program main(input, output);
+	var a: integer;
 begin
-	write(2) { printf("%d \n", 2); }
+	a := 4;
+	write(a)
 end.
 

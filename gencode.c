@@ -49,21 +49,29 @@ int label_aux(tree_t *tree) {
 	}
 }
 
+void gen_code_io_strings() {
+	printf("\t.section .rodata\n");
+	printf(".LC0:\n");
+	printf("\t.string \"%%d\\n\"\n");
+}
+
 void gen_code_main_preamble() {
-	printf(".globl\tmain\n");
+	printf("\t.text\n");
+	printf("\t.globl\tmain\n");
 	printf("main:\n");
 	// Push base pointer
 	printf("\tpushq\t%%rbp\n");
 	// move stack pointer
 	printf("\tmovq\t%%rsp, %%rbp\n");
+	printf("\tsubq\t$16, %%rsp\n");
 }
 
 void gen_code_main_ending() {
 	// Move return value to %rax
 	printf("\tmovq\t$0, %%rax\n");
 	// Pop base pointer
-	printf("\tpopq\t%%rbp\n");
 	// Quit
+	printf("\tleave\n");
 	printf("\tret\n");
 }
 
@@ -76,6 +84,11 @@ void gen_code_stmt_list(statement_t *list) {
 			stmt->stmt.assign_stmt.tree = tree_label(stmt->stmt.assign_stmt.tree);
 			gen_code_expr(stmt->stmt.assign_stmt.tree);
 			printf("\tmovq\t%%rax, %d(%%rbp)\n", -4*stmt->stmt.assign_stmt.ident->offset);
+			break;
+		case ST_PROC:
+			stmt->stmt.proc_stmt.proc_expr_list->head = tree_label(stmt->stmt.proc_stmt.proc_expr_list->head);
+			if(strcmp(stmt->stmt.proc_stmt.ident->name, "write") == 0)
+				gen_code_write(stmt->stmt.proc_stmt.proc_expr_list->head);
 			break;
 		default:
 			printf("Nope, don't care yet\n");
@@ -104,24 +117,28 @@ void gen_code_expr(tree_t *tree) {
 	}
 }
 
-void gen_code_write(tree_list_t *expr_list) {
+void gen_code_write(tree_t *expr) {
 	// When generating a call to write, you can assume that it has one parameter,
 	// if none, quit. if more, discard them
 
-	// Empty expr_list
-	if(expr_list->head != NULL) {
+	// Empty expresssion
+	if(expr == NULL) {
 		fprintf(stderr, "[Error]: No parameter to write\n");
 		exit(-1);
 	}
 
 	// gencode the top of the expr_list which is the only parameter
-	gen_code_expr(expr_list->head);
+	gen_code_expr(expr);
 
 	// move this value which is now in %rax into a parameter for printf
+	printf("\tmovq\t%%rax, %%rsi\n");
 
 	// Push string into register
+	printf("\tmovq\t$.LC0, %%rdi\n");
 
+	printf("\tmovq\t$0, %%rax\n");
 	// Call printf
+	printf("\tcall\tprintf\n");
 }
 
 char* get_val(tree_t *tree) {
