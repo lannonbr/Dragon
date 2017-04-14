@@ -6,9 +6,11 @@ main:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	$40, -4(%rbp)
-	cmpl	$4, -4(%rbp)
-	jne	.L2
-	movl	$20, -8(%rbp)
+	movl	$2, -8(%rbp)
+	movl	-8(%rbp), %eax
+	cmpl	-4(%rbp), %eax
+	jle	.L2
+	movl	$20, -12(%rbp)
 	movl	$0, %eax
 	jmp	.L3
 .L2:
@@ -17,5 +19,5 @@ main:
 	popq	%rbp
 	ret
 	.size	main, .-main
-	.ident	"GCC: (GNU) 6.3.1 20170306"
+	.ident	"GCC: (Debian 4.9.2-10) 4.9.2"
 	.section	.note.GNU-stack,"",@progbits

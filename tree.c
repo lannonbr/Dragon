@@ -57,7 +57,7 @@ void print_tree(tree_t * tree, int offset) {
 
 	switch(tree->type) {
 		case T_BINOP:
-			printf("BINOP: ");
+			printf("L(%d) BINOP: ", tree->leaf);
 			print_binop(tree);
 			break;
 		case T_UNOP:
@@ -69,7 +69,7 @@ void print_tree(tree_t * tree, int offset) {
 			break;
 		case T_INT:
 			printf("INT ");
-			printf("%d\n", tree->attribute.ival);
+			printf("L(%d) %d\n", tree->leaf, tree->attribute.ival);
 			break;
 		case T_OTHER:
 			printf("OTHER\n");

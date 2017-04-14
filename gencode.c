@@ -1,9 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "gencode.h"
 #include "tree.h"
 #include "pascal.tab.h"
+#include "regstack.h"
 
 extern int num_registers;
+extern regstack_t * reg_stack;
+extern int label_count;
 
 tree_t * tree_label(tree_t *tree) {
 	tree_t * curr_tree = tree;
@@ -90,6 +95,9 @@ void gen_code_stmt_list(statement_t *list) {
 			if(strcmp(stmt->stmt.proc_stmt.ident->name, "write") == 0)
 				gen_code_write(stmt->stmt.proc_stmt.proc_expr_list->head);
 			break;
+        case ST_IFTHENELSE:
+            gen_code_if_then_else(stmt);
+            break;
 		default:
 			printf("Nope, don't care yet\n");
 			break;
@@ -103,17 +111,47 @@ void gen_code_expr(tree_t *tree) {
 	// GENCODE Algorithm from class
 	if(tree->leaf && tree->side == S_LEFT) {
 		// CASE 0
-		printf("\tmovq\t%s, %s\n", get_val(tree), "%rax");
+		printf("\tmovq\t%s, %s\n", get_val(tree), top_reg_stack(reg_stack));
 	} else if(tree->right->leaf) {
 		// CASE 1
+		gen_code_expr(tree->left);
+		gen_code_expr_op(tree->attribute.bopval, get_val(tree->right), top_reg_stack(reg_stack));
 	} else if(tree->right->label > tree->left->label && num_registers > tree->left->label) {
 		// CASE 2
+		reg_stack = swap_reg_stack(reg_stack);
+		gen_code_expr(tree->right);
+		char* reg = pop_reg_stack(reg_stack);
+		gen_code_expr(tree->left);
+		gen_code_expr_op(tree->attribute.bopval, reg, top_reg_stack(reg_stack));
+		reg_stack = push_reg_stack(reg_stack, reg);
+		reg_stack = swap_reg_stack(reg_stack);
 	} else if(tree->left->label >= tree->right->label && num_registers > tree->right->label) {
 		// CASE 3
+		gen_code_expr(tree->left);
+		char* reg = pop_reg_stack(reg_stack);
+		gen_code_expr(tree->right);
+		gen_code_expr_op(tree->attribute.bopval, top_reg_stack(reg_stack), reg);
 	} else {
 		// CASE 4
 		printf("This shouldn't run. If it does, oh dear\n");
 		exit(-1);
+	}
+}
+
+void gen_code_expr_op(binop op, char* fparam, char* sparam) {
+	switch(op) {
+		case OP_ADD:
+			printf("\tadd\t%s, %s\n", fparam, sparam);
+			break;
+		case OP_MUL:
+			printf("\timul\t%s, %s\n", fparam, sparam);
+			break;
+		case OP_SUB:
+			printf("\tsub\t%s, %s\n", fparam, sparam);
+			break;
+		case OP_DIV:
+			printf("\tdiv\t%s, %s\n", fparam, sparam);
+			break;
 	}
 }
 
@@ -139,6 +177,24 @@ void gen_code_write(tree_t *expr) {
 	printf("\tmovq\t$0, %%rax\n");
 	// Call printf
 	printf("\tcall\tprintf\n");
+}
+
+void gen_code_if_then_else(statement_t *stmt) {
+    gen_code_expr(stmt->stmt.if_then_else_stmt.tree->left);
+    printf("\tcmp\t%s, %s\n", get_val(stmt->stmt.if_then_else_stmt.tree->right), top_reg_stack(reg_stack));
+
+    switch(stmt->stmt.if_then_else_stmt.tree->attribute.bopval) {
+        case OP_GT:
+            printf("\tjg .L%d\n", label_count);
+            break;
+    }
+    gen_code_stmt_list(stmt->stmt.if_then_else_stmt.if_stmt);
+    printf("\tjmp .L%d\n", label_count+1);
+    printf(".L%d:\n", label_count);
+    label_count++;
+    gen_code_stmt_list(stmt->stmt.if_then_else_stmt.else_stmt);
+    printf(".L%d:\n", label_count);
+    label_count++;
 }
 
 char* get_val(tree_t *tree) {

@@ -8,7 +8,7 @@ begin
         x := 20; { assign }
         x := 30; { assign }
         write(40); { proc call with expr list of len 1 }
-        write(x, x) { proc call with expr list of len 1 }
+        write(x) { proc call with expr list of len 1 }
     end
     else
         x := 7; { assign }
