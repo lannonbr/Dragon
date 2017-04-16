@@ -1,3 +1,4 @@
+{* More testing for long expressions *}
 program main(input, output);
     var a: integer;
 begin

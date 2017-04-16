@@ -1,3 +1,4 @@
+{* A much larger program which includes assignments, writing, and conditionals *}
 program main(input, output);
     var x : integer;
 begin

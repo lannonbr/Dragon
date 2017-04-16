@@ -58,6 +58,8 @@ void gen_code_io_strings() {
 	printf("\t.section .rodata\n");
 	printf(".LC0:\n");
 	printf("\t.string \"%%d\\n\"\n");
+	printf(".LC1:\n");
+	printf("\t.string \"%%d\"\n");
 }
 
 void gen_code_main_preamble() {
@@ -94,10 +96,15 @@ void gen_code_stmt_list(statement_t *list) {
 			stmt->stmt.proc_stmt.proc_expr_list->head = tree_label(stmt->stmt.proc_stmt.proc_expr_list->head);
 			if(strcmp(stmt->stmt.proc_stmt.ident->name, "write") == 0)
 				gen_code_write(stmt->stmt.proc_stmt.proc_expr_list->head);
+			if(strcmp(stmt->stmt.proc_stmt.ident->name, "read") == 0)
+				gen_code_read(stmt->stmt.proc_stmt.proc_expr_list->head);
 			break;
         case ST_IFTHENELSE:
             gen_code_if_then_else(stmt);
             break;
+		case ST_WHILE:
+			gen_code_while(stmt);
+			break;
 		default:
 			printf("Nope, don't care yet\n");
 			break;
@@ -179,6 +186,23 @@ void gen_code_write(tree_t *expr) {
 	printf("\tcall\tprintf\n");
 }
 
+void gen_code_read(tree_t *expr) {
+	if(expr == NULL) {
+		fprintf(stderr, "[Error]: No parameter to function read");
+		exit(-1);
+	}
+
+	printf("\tleaq\t%s, %rax\n", get_val(expr));
+
+	printf("\tmovq\t%%rax, %%rsi\n");
+
+	printf("\tmovq\t$.LC1, %%rdi\n");
+
+	printf("\tmovq\t$0, %%rax\n");
+
+	printf("\tcall\t__isoc99_scanf\n");
+}
+
 void gen_code_if_then_else(statement_t *stmt) {
     gen_code_expr(stmt->stmt.if_then_else_stmt.tree->left);
     printf("\tcmp\t%s, %s\n", get_val(stmt->stmt.if_then_else_stmt.tree->right), top_reg_stack(reg_stack));
@@ -197,8 +221,40 @@ void gen_code_if_then_else(statement_t *stmt) {
     label_count++;
 }
 
+void gen_code_while(statement_t *stmt) {
+	// write jmp to N (ex: .L2)
+	printf("\tjmp\t.L%d\n", label_count);
+	
+	// write N+1 and body of loop
+	printf(".L%d:\n", label_count+1);
+	gen_code_stmt_list(stmt->stmt.while_stmt.do_stmt);	
+
+	// write N and condition for this loop
+	printf(".L%d:\n", label_count);
+	/* gen_code_expr(stmt->stmt.while_stmt.tree->left); */
+	/* print_tree(stmt->stmt.while_stmt.tree, 0); */
+	/* printf("Leftaddr: %x, Rightaddr: %x\n", &(stmt->stmt.while_stmt.tree->left), &(stmt->stmt.while_stmt.tree->right)); */
+	char* left = get_val(stmt->stmt.while_stmt.tree->left);
+	char* right = get_val(stmt->stmt.while_stmt.tree->right);
+	/* printf("left: %s\nright: %s\n", left, right); */
+
+	printf("\tcmp\t%s, %s\n", right, left);
+
+	// if the loop check returns true, jump back to N+1
+    switch(stmt->stmt.if_then_else_stmt.tree->attribute.bopval) {
+        case OP_GT:
+            printf("\tjg .L%d\n", label_count+1);
+            break;
+        case OP_LT:
+            printf("\tjl .L%d\n", label_count+1);
+            break;
+    }
+	
+}
+
 char* get_val(tree_t *tree) {
-	char str[50];
+	/* char str[50]; */
+	char* str = malloc(50 * sizeof(char));
 	
 	switch(tree->type) {
 		case T_INT: 

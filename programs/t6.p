@@ -1,3 +1,4 @@
+{* A simple if statement *}
 program main(input, output);
     var a, b: integer;
 begin
