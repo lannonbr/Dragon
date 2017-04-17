@@ -85,6 +85,11 @@ void gen_code_main_ending() {
 void gen_code_stmt_list(statement_t *list) {
 	// Go through each statement and generate the code depending on the statement type
 	statement_t *stmt = list;
+
+	// If stmt is empty, just return
+	if(stmt == NULL) {
+		return;
+	}
 	
 	switch(stmt->type) {
 		case ST_ASSIGN:
@@ -182,6 +187,7 @@ void gen_code_write(tree_t *expr) {
 	printf("\tmovq\t$.LC0, %%rdi\n");
 
 	printf("\tmovq\t$0, %%rax\n");
+	
 	// Call printf
 	printf("\tcall\tprintf\n");
 }
@@ -192,6 +198,7 @@ void gen_code_read(tree_t *expr) {
 		exit(-1);
 	}
 
+	// Load the param's address into %rax
 	printf("\tleaq\t%s, %rax\n", get_val(expr));
 
 	printf("\tmovq\t%%rax, %%rsi\n");
@@ -208,9 +215,24 @@ void gen_code_if_then_else(statement_t *stmt) {
     printf("\tcmp\t%s, %s\n", get_val(stmt->stmt.if_then_else_stmt.tree->right), top_reg_stack(reg_stack));
 
     switch(stmt->stmt.if_then_else_stmt.tree->attribute.bopval) {
-        case OP_GT:
-            printf("\tjg .L%d\n", label_count);
-            break;
+		case OP_LT:
+			printf("\tjge .L%d\n", label_count);
+			break;
+		case OP_LE:
+			printf("\tjg .L%d\n", label_count);
+			break;
+		case OP_GT:
+			printf("\tjle .L%d\n", label_count);
+			break;
+		case OP_GE:
+			printf("\tjl .L%d\n", label_count);
+			break;
+		case OP_EQ:
+			printf("\tjne .L%d\n", label_count);
+			break;
+		case OP_NEQ:
+			printf("\tje .L%d\n", label_count);
+			break;
     }
     gen_code_stmt_list(stmt->stmt.if_then_else_stmt.if_stmt);
     printf("\tjmp .L%d\n", label_count+1);
@@ -231,12 +253,9 @@ void gen_code_while(statement_t *stmt) {
 
 	// write N and condition for this loop
 	printf(".L%d:\n", label_count);
-	/* gen_code_expr(stmt->stmt.while_stmt.tree->left); */
-	/* print_tree(stmt->stmt.while_stmt.tree, 0); */
-	/* printf("Leftaddr: %x, Rightaddr: %x\n", &(stmt->stmt.while_stmt.tree->left), &(stmt->stmt.while_stmt.tree->right)); */
+
 	char* left = get_val(stmt->stmt.while_stmt.tree->left);
 	char* right = get_val(stmt->stmt.while_stmt.tree->right);
-	/* printf("left: %s\nright: %s\n", left, right); */
 
 	printf("\tcmp\t%s, %s\n", right, left);
 
@@ -253,7 +272,6 @@ void gen_code_while(statement_t *stmt) {
 }
 
 char* get_val(tree_t *tree) {
-	/* char str[50]; */
 	char* str = malloc(50 * sizeof(char));
 	
 	switch(tree->type) {
