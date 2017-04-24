@@ -8,7 +8,7 @@ sym_table_stack_t *create_stack() {
 	int i;
 	sym_table_stack_t * stack = (sym_table_stack_t*) malloc(sizeof(sym_table_stack_t));
 
-	stack->var_count = 0;
+	stack->var_count = 1;
 
 	for(int i = 0; i < HASH_SIZE; i++) {
 		stack->table[i] = NULL;
@@ -26,10 +26,17 @@ sym_table_stack_t *pop_stack(sym_table_stack_t *head) {
 		temp_stack = head;
 		head = head->next;
 
-		free_sts(temp_stack);
+		/* printf("Popping stack [%s]\n", temp_stack->name); */
+
+		if(head != NULL) {
+			/* printf("Now Top: [%s]\n", head->name); */
+		}
+
+		/* free_sts(temp_stack); */
 
 		return head;
 	}
+
 
 	return NULL;
 }
@@ -45,6 +52,8 @@ sym_table_stack_t *push_stack(sym_table_stack_t *head, char* name) {
 	new_stack->next = head;
 	new_stack->name = name;
 
+	/* printf("New stack [%s] created\n", name); */
+
 	return new_stack;
 }
 
@@ -55,6 +64,7 @@ node_t * sts_search(sym_table_stack_t *head, char* name) {
 
 	if(head != NULL) {
 		idx = hashpjw(name);
+		/* printf("HASHPJW[%s]: %d\n", name, idx); */
 		node = head->table[idx];
 
 		return search_node(node, name);
@@ -99,12 +109,14 @@ node_t * sts_insert(sym_table_stack_t *head, int type, char* name) {
 
 	if(head != NULL) {
 		idx = hashpjw(tmp_name);
+		/* printf("HASHPJW[%s]: %d\n", tmp_name, idx); */
 
 		node = head->table[idx];
 
 		// Insert only if the node doesn't already exist in the current scope
 		if(search_node(node, tmp_name) == NULL) {
 			head->table[idx] = insert_node(node, type, tmp_name, head->var_count);
+			/* printf("Inserted %s into %s\n", tmp_name, head->name); */
 			head->var_count += 1;
 			return head->table[idx];
 		} else {

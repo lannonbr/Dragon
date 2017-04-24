@@ -17,6 +17,9 @@ void gen_code_write(tree_t *expr);
 void gen_code_read(tree_t *expr);
 void gen_code_if_then_else(statement_t *stmt);
 void gen_code_while(statement_t *stmt);
+void gen_code_proc_call(statement_t *stmt);
+void gen_code_proc_preamble();
+void gen_code_proc_ending();
 
 char* get_val(tree_t *tree);
 

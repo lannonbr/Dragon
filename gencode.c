@@ -60,10 +60,10 @@ void gen_code_io_strings() {
 	printf("\t.string \"%%d\\n\"\n");
 	printf(".LC1:\n");
 	printf("\t.string \"%%d\"\n");
+	printf("\t.text\n");
 }
 
 void gen_code_main_preamble() {
-	printf("\t.text\n");
 	printf("\t.globl\tmain\n");
 	printf("main:\n");
 	// Push base pointer
@@ -98,11 +98,14 @@ void gen_code_stmt_list(statement_t *list) {
 			printf("\tmovq\t%%rax, %d(%%rbp)\n", -4*stmt->stmt.assign_stmt.ident->offset);
 			break;
 		case ST_PROC:
-			stmt->stmt.proc_stmt.proc_expr_list->head = tree_label(stmt->stmt.proc_stmt.proc_expr_list->head);
+			if(stmt->stmt.proc_stmt.proc_expr_list != NULL)
+				stmt->stmt.proc_stmt.proc_expr_list->head = tree_label(stmt->stmt.proc_stmt.proc_expr_list->head);
 			if(strcmp(stmt->stmt.proc_stmt.ident->name, "write") == 0)
 				gen_code_write(stmt->stmt.proc_stmt.proc_expr_list->head);
-			if(strcmp(stmt->stmt.proc_stmt.ident->name, "read") == 0)
+			else if(strcmp(stmt->stmt.proc_stmt.ident->name, "read") == 0)
 				gen_code_read(stmt->stmt.proc_stmt.proc_expr_list->head);
+			else
+				gen_code_proc_call(stmt);
 			break;
         case ST_IFTHENELSE:
             gen_code_if_then_else(stmt);
@@ -269,6 +272,22 @@ void gen_code_while(statement_t *stmt) {
             break;
     }
 	
+}
+
+void gen_code_proc_call(statement_t *stmt) {
+	printf("\tmovq\t$0, %%rax\n");
+	printf("\tcall\t%s\n", stmt->stmt.proc_stmt.ident->name);
+}
+
+void gen_code_proc_preamble() {
+	printf("\tpushq\t%%rbp\n");
+	printf("\tmovq\t%%rsp, %%rbp\n");
+	printf("\tsubq\t$16, %%rsp\n");
+}
+
+void gen_code_proc_ending() {
+	printf("\tleave\n");
+	printf("\tret\n");
 }
 
 char* get_val(tree_t *tree) {

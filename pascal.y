@@ -78,16 +78,15 @@ int label_count;
 start: program;
 
 program: PROGRAM
-    IDENT { top_scope = push_stack(top_scope, $2); }
+    IDENT
     '(' identifier_list ')' ';' 
     declarations
     subprogram_declarations
     compound_statement
     {
-        // stmt_list_print($10, 0);
-		gen_code_io_strings();
+        /* stmt_list_print($9, 0); */
         gen_code_main_preamble();
-        gen_code_stmt_list($10);
+        gen_code_stmt_list($9);
         gen_code_main_ending();
     }
     '.' { top_scope = pop_stack(top_scope); }
@@ -137,11 +136,29 @@ subprogram_declarations: subprogram_declarations subprogram_declaration ';'
     | /* empty */
     ;
 
-subprogram_declaration: subprogram_head declarations subprogram_declarations compound_statement
+subprogram_declaration: subprogram_head
+	declarations
+	subprogram_declarations 
+	compound_statement
+	{
+        /* stmt_list_print($4, 0); */
+		gen_code_proc_preamble();
+		gen_code_stmt_list($4);
+		gen_code_proc_ending();
+		top_scope = pop_stack(top_scope);
+	}
     ;
 
 subprogram_head: FUNCTION IDENT arguments ':' standard_type ';'
-    | PROCEDURE IDENT arguments ';'
+    | PROCEDURE
+	IDENT
+	{ 
+		node_t* temp = sts_insert(top_scope, 2, $2);
+		top_scope = push_stack(top_scope, $2); 
+		top_scope->var_count++;
+		printf("%s:\n", $2);
+	}
+	arguments ';'
     ;
 
 arguments: '(' parameter_list ')'
@@ -257,5 +274,9 @@ int main() {
 	reg_stack = push_reg_stack(reg_stack, "%rax");
     label_count = 2;
     
+	top_scope = push_stack(top_scope, "main");
+
+	gen_code_io_strings();
+
     yyparse();
 }
