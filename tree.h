@@ -22,7 +22,7 @@ typedef struct tree_s {
 
 typedef struct tree_list_s {
 	tree_t * head;
-	tree_t * next;
+	struct tree_list_s * next;
 } tree_list_t;
 
 tree_t * gen_tree();
@@ -34,6 +34,7 @@ tree_t * gen_unaryop(unaryop opval, tree_t *left);
 
 void print_tree(tree_t *tree, int offset);
 void print_binop(tree_t *tree);
+void print_tree_list(tree_list_t *tree_list);
 
 void free_tree(tree_t *tree);
 

@@ -134,6 +134,20 @@ void print_binop(tree_t * tree) {
 	}
 }
 
+void print_tree_list(tree_list_t *tree_list) {
+	tree_list_t *tl_head = tree_list;
+	tree_t *curr = tl_head->head;
+
+	if(curr != NULL) {
+		print_tree(curr, 0);
+		while(tl_head->next != NULL) {
+			tl_head = tl_head->next;
+			curr = tl_head->head;
+			print_tree(curr, 0);
+		}
+	}
+}
+
 void free_tree(tree_t *tree) {
 	free_tree(tree->left);
 	free_tree(tree->right);
@@ -152,11 +166,11 @@ tree_list_t * tree_list_insert(tree_list_t *tree_list, tree_t *tree) {
 	tree_list_t *curr_tree = tree_list;
 
 	while(curr_tree->next != NULL)
-		curr_tree->head = curr_tree->next;
+		curr_tree = curr_tree->next;
 
-	curr_tree->next = tree;
+	curr_tree->next = create_tree_list(tree);
 
-	return curr_tree;
+	return tree_list;
 }
 
 void free_tree_list(tree_list_t *tree_list) {
