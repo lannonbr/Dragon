@@ -21,6 +21,7 @@ void gen_code_proc_call(statement_t *stmt);
 void gen_code_proc_preamble();
 void gen_code_proc_ending();
 
+void push_parameters(tree_list_t *list);
 char* get_val(tree_t *tree);
 
 #endif

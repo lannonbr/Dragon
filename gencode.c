@@ -276,6 +276,9 @@ void gen_code_while(statement_t *stmt) {
 
 void gen_code_proc_call(statement_t *stmt) {
 	printf("\tmovq\t$0, %%rax\n");
+	/* if(stmt->stmt.proc_stmt.proc_expr_list != NULL) { */
+	/* 	push_parameters(stmt->stmt.proc_stmt.proc_expr_list); */
+	/* } */
 	printf("\tcall\t%s\n", stmt->stmt.proc_stmt.ident->name);
 }
 
@@ -288,6 +291,17 @@ void gen_code_proc_preamble() {
 void gen_code_proc_ending() {
 	printf("\tleave\n");
 	printf("\tret\n");
+}
+
+void push_parameters(tree_list_t *list) {
+	tree_list_t * loc_list = list;
+	tree_t * tree = loc_list->head;
+	
+	while(tree != NULL) {
+		print_tree(tree, 10);
+		tree = loc_list->next;
+		loc_list->head = loc_list->next;
+	}
 }
 
 char* get_val(tree_t *tree) {

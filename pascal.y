@@ -56,6 +56,8 @@ int label_count;
 %type <tyval> type
 %type <tyval> standard_type
 
+%type <nval> arguments
+%type <nval> parameter_list
 %type <nval> identifier_list
 
 %type <stval> compound_statement
@@ -79,15 +81,15 @@ start: program;
 
 program: PROGRAM
     IDENT
-    '(' identifier_list ')' ';' 
+    '(' identifier_list ')' ';' { tmp_nodes = NULL; }
     declarations
     subprogram_declarations
     compound_statement
     {
-        /* stmt_list_print($9, 0); */
-        gen_code_main_preamble();
-        gen_code_stmt_list($9);
-        gen_code_main_ending();
+        stmt_list_print(top_scope->name, $10, 0);
+        // gen_code_main_preamble();
+        // gen_code_stmt_list($10);
+        // gen_code_main_ending();
     }
     '.' { top_scope = pop_stack(top_scope); }
     ;
@@ -96,17 +98,31 @@ identifier_list: IDENT
     { 
         node_t * node = sts_insert(top_scope, 0, $1);
         node_t * tmp = tmp_nodes;
-        tmp_nodes=node;
-        tmp_nodes->next = tmp;
+        
+        if(tmp_nodes) {
+            while(tmp->next != NULL) {
+                tmp = tmp->next;
+            }
+            tmp->next = node;
+        } else {
+            tmp_nodes = node;
+        }
 
         $$ = tmp_nodes;
     }
     | identifier_list ',' IDENT 
     {
-        node_t * node = sts_insert(top_scope, 0, $3);
+        node_t * node = sts_insert(top_scope, 0, $3);        
         node_t * tmp = tmp_nodes;
-        tmp_nodes=node;
-        tmp_nodes->next = tmp;
+
+        if(tmp_nodes) {
+            while(tmp->next != NULL) {
+                tmp = tmp->next;
+            }
+            tmp->next = node;
+        } else {
+            tmp_nodes = node;
+        }
 
         $$ = tmp_nodes;
     }
@@ -119,6 +135,7 @@ declarations: declarations VAR identifier_list ':' type ';'
             node->var_type = $5;
             node = node->next;
         }
+        tmp_nodes = NULL;
     }
     | /* empty */
     ;
@@ -141,32 +158,44 @@ subprogram_declaration: subprogram_head
 	subprogram_declarations 
 	compound_statement
 	{
-        /* stmt_list_print($4, 0); */
-		gen_code_proc_preamble();
-		gen_code_stmt_list($4);
-		gen_code_proc_ending();
+        stmt_list_print(top_scope->name, $4, 0);
+		// gen_code_proc_preamble();
+		// gen_code_stmt_list($4);
+		// gen_code_proc_ending();
 		top_scope = pop_stack(top_scope);
 	}
     ;
 
-subprogram_head: FUNCTION IDENT arguments ':' standard_type ';'
-    | PROCEDURE
-	IDENT
-	{ 
-		node_t* temp = sts_insert(top_scope, 2, $2);
+subprogram_head: FUNCTION IDENT arguments ':' standard_type ';' 
+    {
+        node_t* temp = sts_insert(top_scope, 1, $2);
+        printf("New Func: %s\n", temp->name);
 		top_scope = push_stack(top_scope, $2); 
 		top_scope->var_count++;
 		printf("%s:\n", $2);
-	}
-	arguments ';'
+
+        temp->arguments = $3;
+
+        temp->ret_type = $5;
+    }
+    | PROCEDURE IDENT arguments ';'
+    {
+        node_t* temp = sts_insert(top_scope, 2, $2);
+        printf("New Proc: %s\n", temp->name);
+		top_scope = push_stack(top_scope, $2); 
+		top_scope->var_count++;
+		printf("%s:\n", $2);
+
+        temp->arguments = $3;
+    }
     ;
 
-arguments: '(' parameter_list ')'
-    | /* empty */
+arguments: '(' parameter_list ')' { $$ = $2; }
+    | /* empty */ 
     ;
 
-parameter_list: identifier_list ':' type
-    | parameter_list ';' identifier_list ':' type
+parameter_list: identifier_list ':' type { $$ = $1; }
+    | parameter_list ';' identifier_list ':' type { $$ = $1; }
     ;
 
 compound_statement: BBEGIN
@@ -202,27 +231,32 @@ variable: IDENT { $$ = sts_global_search(top_scope, $1); /* printf("Assign to va
     ;
 
 procedure_statement: IDENT { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), NULL); }
-    | IDENT '(' expression_list ')' { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3); tmp_tree_list = NULL; }
+    | IDENT '(' expression_list ')'
+    { 
+        print_tree_list($3);
+        $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3);
+        tmp_tree_list = NULL;
+    }
     ;
 
 expression_list: expression
     {
         if(tmp_tree_list == NULL) {
             tmp_tree_list = create_tree_list($1);
-	    $$ = tmp_tree_list;
+            $$ = tmp_tree_list;
         } else {
             tmp_tree_list = tree_list_insert(tmp_tree_list, $1);
-	    $$ = tmp_tree_list;
+	        $$ = tmp_tree_list;
         }
     }
     | expression_list ',' expression
     {
         if(tmp_tree_list == NULL) {
             tmp_tree_list = create_tree_list($3);
-	    $$ = tmp_tree_list;
+	        $$ = tmp_tree_list;
         } else {
             tmp_tree_list = tree_list_insert(tmp_tree_list, $3);
-	    $$ = tmp_tree_list;
+	        $$ = tmp_tree_list;
         }
     }
     ;
@@ -246,7 +280,7 @@ factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); $$->side = S_L
     | INUM { $$ = gen_int($1); $$->leaf = 1; $$->side = S_LEFT; }
     | RNUM { $$ = gen_real($1); $$->leaf = 1; $$->side = S_LEFT; }
     | '(' expression ')' { $$ = $2; }
-    | NOT factor { $$ = gen_tree(); }
+    | NOT factor { $$ = gen_tree(); /* Did not do the things */ }
     ;
 
 %%
