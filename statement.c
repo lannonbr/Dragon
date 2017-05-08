@@ -66,43 +66,51 @@ statement_t * stmt_list_append(statement_t *list, statement_t *statement) {
 }
 
 // Debugging function to view the statement list and it's contents
-void stmt_list_print(statement_t *list, int offset) {
-	// If the list is empty, return
-	if(list == NULL)
-		return;
-
+void stmt_list_print(char* scope_name, statement_t *list, int offset) {
+	
 	// print spaces to align things for recursive calls
 	print_spaces(offset);
+	
+	// If the list is empty, return
+	if(list == NULL) {
+		printf("Empty Statement\n");
+		return;
+	}
 
 	// Switch on type and print some information about the statement itself
 	// and then call the inner statements
 	switch(list->type) {
 		case ST_ASSIGN:
-			printf("[Statement]: ASSIGN %s = %d\n", list->stmt.assign_stmt.ident->name, list->stmt.assign_stmt.tree->attribute.ival);
+			printf("[%s | Statement]: ASSIGN\n", scope_name);
+			print_spaces(offset+4);
+			printf("id: %s\n", list->stmt.assign_stmt.ident->name);
+			print_spaces(offset+4);
+			printf("val: %d\n", list->stmt.assign_stmt.tree->attribute.ival);
 			break;
 		case ST_PROC:
-			printf("[Statement]: PROCEDURE %s\n", list->stmt.proc_stmt.ident->name);
+			printf("[%s | Statement]: PROCEDURE %s\n", scope_name, list->stmt.proc_stmt.ident->name);
+			printf("Arguments:\n");
+			print_tree_list(list->stmt.proc_stmt.proc_expr_list);
 			break;
 		case ST_IFTHENELSE:
-			printf("[Statement]: IFTHENELSE\n");
+			printf("[%s | Statement]: IFTHENELSE\n", scope_name);
 			printf("If Stmt:\n");
-			stmt_list_print(list->stmt.if_then_else_stmt.if_stmt, offset+4);
+			stmt_list_print(scope_name, list->stmt.if_then_else_stmt.if_stmt, offset+4);
 			printf("Else Stmt:\n");
-			stmt_list_print(list->stmt.if_then_else_stmt.else_stmt, offset+4);
+			stmt_list_print(scope_name, list->stmt.if_then_else_stmt.else_stmt, offset+4);
 			break;
 		case ST_WHILE:
-			printf("[Statement]: WHILE\n");
+			printf("[%s | Statement]: WHILE\n", scope_name);
 			printf("Do Stmt:\n");
-			stmt_list_print(list->stmt.while_stmt.do_stmt, offset+4);
+			stmt_list_print(scope_name, list->stmt.while_stmt.do_stmt, offset+4);
 			break;
 		default:
-			printf("[Statement]: WAT\n%p", list);
 			break;
 	}
 
 	// If there's another statement in the list, continue
 	if(list->next != NULL)
-		stmt_list_print(list->next, offset);
+		stmt_list_print(scope_name, list->next, offset);
 }
 
 // Like stmt_list_print, but when it is being added to the list
