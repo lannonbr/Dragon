@@ -1,6 +1,8 @@
 	.section .rodata
 .LC0:
 	.string "%d\n"
+.LC1:
+	.string "%d"
 	.text
 	.globl	main
 main:
@@ -8,12 +10,12 @@ main:
 	movq	%rsp, %rbp
 	subq	$16, %rsp
 	movq	$2, %rax
-	movq	%rax, -8(%rbp)
-	movq	$1, %rax
 	movq	%rax, -12(%rbp)
-	movq	-8(%rbp), %rax
-	cmp	-12(%rbp), %rax
-	jg .L2
+	movq	$1, %rax
+	movq	%rax, -16(%rbp)
+	movq	-12(%rbp), %rax
+	cmp	-16(%rbp), %rax
+	jle .L2
 	movq	$7, %rax
 	movq	%rax, %rsi
 	movq	$.LC0, %rdi
