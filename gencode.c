@@ -293,6 +293,7 @@ void gen_code_proc_ending() {
 	printf("\tret\n");
 }
 
+// NOT fully implemented
 void push_parameters(tree_list_t *list) {
 	tree_list_t * loc_list = list;
 	tree_t * tree = loc_list->head;

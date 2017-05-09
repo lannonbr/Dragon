@@ -86,10 +86,10 @@ program: PROGRAM
     subprogram_declarations
     compound_statement
     {
-        stmt_list_print(top_scope->name, $10, 0);
-        // gen_code_main_preamble();
-        // gen_code_stmt_list($10);
-        // gen_code_main_ending();
+        /* stmt_list_print(top_scope->name, $10, 0); */
+        gen_code_main_preamble();
+        gen_code_stmt_list($10);
+        gen_code_main_ending();
     }
     '.' { top_scope = pop_stack(top_scope); }
     ;
@@ -140,7 +140,6 @@ declarations: declarations VAR identifier_list ':' type ';'
     | /* empty */
     ;
 
-/* TODO: Pass size of Array up to declarations field */
 type: standard_type { $$ = $1; }
     | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type { $$ = ($8 == T_REAL) ? T_ARR_REAL : T_ARR_INT; }
     ;
@@ -158,10 +157,10 @@ subprogram_declaration: subprogram_head
 	subprogram_declarations 
 	compound_statement
 	{
-        stmt_list_print(top_scope->name, $4, 0);
-		// gen_code_proc_preamble();
-		// gen_code_stmt_list($4);
-		// gen_code_proc_ending();
+        /* stmt_list_print(top_scope->name, $4, 0); */
+		gen_code_proc_preamble();
+		gen_code_stmt_list($4);
+		gen_code_proc_ending();
 		top_scope = pop_stack(top_scope);
 	}
     ;
@@ -169,7 +168,7 @@ subprogram_declaration: subprogram_head
 subprogram_head: FUNCTION IDENT arguments ':' standard_type ';' 
     {
         node_t* temp = sts_insert(top_scope, 1, $2);
-        printf("New Func: %s\n", temp->name);
+        /* printf("New Func: %s\n", temp->name); */
 		top_scope = push_stack(top_scope, $2); 
 		top_scope->var_count++;
 		printf("%s:\n", $2);
@@ -181,7 +180,7 @@ subprogram_head: FUNCTION IDENT arguments ':' standard_type ';'
     | PROCEDURE IDENT arguments ';'
     {
         node_t* temp = sts_insert(top_scope, 2, $2);
-        printf("New Proc: %s\n", temp->name);
+        /* printf("New Proc: %s\n", temp->name); */
 		top_scope = push_stack(top_scope, $2); 
 		top_scope->var_count++;
 		printf("%s:\n", $2);
@@ -226,14 +225,14 @@ statement: variable ASSIGNOP expression { $$ = stmt_gen_assign($1, $3); }
     | WHILE expression DO statement { $$ = stmt_gen_while($2, $4); }
     ;
 
-variable: IDENT { $$ = sts_global_search(top_scope, $1); /* printf("Assign to var\n"); */ }
-    | IDENT '[' expression ']' { printf("Assign to array index\n"); }
+variable: IDENT { $$ = sts_global_search(top_scope, $1); }
+    | IDENT '[' expression ']' { /* Arrays, didn't implement */ }
     ;
 
 procedure_statement: IDENT { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), NULL); }
     | IDENT '(' expression_list ')'
     { 
-        print_tree_list($3);
+        /* print_tree_list($3); */
         $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3);
         tmp_tree_list = NULL;
     }
@@ -261,12 +260,12 @@ expression_list: expression
     }
     ;
 
-expression: simple_expression { $$ = $1; /* print_tree($$, 0); */ }
+expression: simple_expression { $$ = $1; }
     | simple_expression RELOP simple_expression { $$ = gen_binop($2, $1, $3); $$->leaf = 0; $1->side = S_LEFT; $3->side = S_RIGHT; }
     ;
 
 simple_expression: term { $$ = $1; }
-    | ADDOP term { $$ = gen_unaryop($1, $2); }
+    | ADDOP term { $$ = gen_unaryop($1, $2); /* Did not get around to implementing */} 
     | simple_expression ADDOP term { $$ = gen_binop($2, $1, $3); $1->side = S_LEFT; $3->side = S_RIGHT; $$->leaf = 0; }
     ;
 
@@ -275,23 +274,17 @@ term: factor { $$ = $1; }
     ;
 
 factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); $$->side = S_LEFT; $$->leaf = 1; }
-    | IDENT '(' expression_list ')' { printf("[Parser] Function Call\n"); $$ = gen_tree(); tmp_tree_list = NULL;}
-    | IDENT '[' expression ']' { printf("[Parser] Array Access\n"); $$ = gen_tree(); }
+    | IDENT '(' expression_list ')' { $$ = gen_tree(); tmp_tree_list = NULL; /* Did not get around to implementing */ }
+    | IDENT '[' expression ']' { $$ = gen_tree(); /* Did not get around to implementing */ }
     | INUM { $$ = gen_int($1); $$->leaf = 1; $$->side = S_LEFT; }
     | RNUM { $$ = gen_real($1); $$->leaf = 1; $$->side = S_LEFT; }
     | '(' expression ')' { $$ = $2; }
-    | NOT factor { $$ = gen_tree(); /* Did not do the things */ }
+    | NOT factor { $$ = gen_tree(); /* Did not get around to implementing */ }
     ;
 
 %%
 
-int main() {
-    top_scope = NULL;
-    tmp_nodes = NULL;
-    tmp_tree_list = NULL;
-    stmt_top_scope = NULL;
-    stmt_scope_id = 0;
-	num_registers = 8;
+void setup_registers() {
 	reg_stack = push_reg_stack(NULL, "%r15");
 	reg_stack = push_reg_stack(reg_stack, "%r14");
 	reg_stack = push_reg_stack(reg_stack, "%r13");
@@ -306,6 +299,16 @@ int main() {
 	reg_stack = push_reg_stack(reg_stack, "%rcx");
 	reg_stack = push_reg_stack(reg_stack, "%rbx");
 	reg_stack = push_reg_stack(reg_stack, "%rax");
+}
+
+int main() {
+    top_scope = NULL;
+    tmp_nodes = NULL;
+    tmp_tree_list = NULL;
+    stmt_top_scope = NULL;
+    stmt_scope_id = 0;
+	num_registers = 8;
+	setup_registers();
     label_count = 2;
     
 	top_scope = push_stack(top_scope, "main");
@@ -314,3 +317,4 @@ int main() {
 
     yyparse();
 }
+

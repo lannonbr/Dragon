@@ -3,16 +3,12 @@
 
 regstack_t * create_reg_stack() {
 	regstack_t * stack = (regstack_t *) malloc(sizeof(regstack_t));
-	
 	stack->head = NULL;
 	stack->next = NULL;
-
 	return stack;
 }
 
 regstack_t * swap_reg_stack(regstack_t * stack) {
-	regstack_t * swapped_regs = create_reg_stack();	
-
 	regstack_t * tmp_stack = create_reg_stack();
 
 	while(stack != NULL) {
@@ -25,18 +21,14 @@ regstack_t * swap_reg_stack(regstack_t * stack) {
 
 char* pop_reg_stack(regstack_t * stack) {
 	char* reg = stack->head;
-
 	stack = stack->next;
-
 	return reg;
 }
 
 regstack_t * push_reg_stack(regstack_t * stack, char* reg) {
 	regstack_t * new_stack = create_reg_stack();
-
 	new_stack->head = reg;
 	new_stack->next = stack;
-
 	return new_stack;
 }
 
