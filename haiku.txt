@@ -1,0 +1,3 @@
+Gencode that pascal.
+Semantics, maybe later.
+Dragon somewhat slain?
