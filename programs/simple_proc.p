@@ -1,7 +1,9 @@
 program main(input, output);
 	procedure boo;
+	var a: integer;
 	begin
-		write(7)
+		a := 4;
+		write(a)
 	end;
 begin
     boo

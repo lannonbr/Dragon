@@ -14,11 +14,8 @@ typedef struct node_s {
 
 	struct node_s *arguments;
 
-	/* function only things */
 	type_e ret_type;
 	int param_count;
-
-	/* procedure only things */
 
 	struct node_s *next;
 } node_t;

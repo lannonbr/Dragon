@@ -86,10 +86,13 @@ program: PROGRAM
     subprogram_declarations
     compound_statement
     {
-        /* stmt_list_print(top_scope->name, $10, 0); */
-        gen_code_main_preamble();
-        gen_code_stmt_list($10);
-        gen_code_main_ending();
+		// Debug printing
+        stmt_list_print(top_scope->name, $10, 0);
+
+		// Gencode
+        /* gen_code_main_preamble(); */
+        /* gen_code_stmt_list($10); */
+        /* gen_code_main_ending(); */
     }
     '.' { top_scope = pop_stack(top_scope); }
     ;
@@ -157,10 +160,13 @@ subprogram_declaration: subprogram_head
 	subprogram_declarations 
 	compound_statement
 	{
-        /* stmt_list_print(top_scope->name, $4, 0); */
-		gen_code_proc_preamble();
-		gen_code_stmt_list($4);
-		gen_code_proc_ending();
+		// Debug Statment printing
+        stmt_list_print(top_scope->name, $4, 0);
+		
+		// Gencode
+		/* gen_code_proc_preamble(); */
+		/* gen_code_stmt_list($4); */
+		/* gen_code_proc_ending(); */
 		top_scope = pop_stack(top_scope);
 	}
     ;
@@ -171,7 +177,7 @@ subprogram_head: FUNCTION IDENT arguments ':' standard_type ';'
         /* printf("New Func: %s\n", temp->name); */
 		top_scope = push_stack(top_scope, $2); 
 		top_scope->var_count++;
-		printf("%s:\n", $2);
+		printf("%s:\n", $2); // The label for a function in the asm.
 
         temp->arguments = $3;
 
@@ -183,7 +189,7 @@ subprogram_head: FUNCTION IDENT arguments ':' standard_type ';'
         /* printf("New Proc: %s\n", temp->name); */
 		top_scope = push_stack(top_scope, $2); 
 		top_scope->var_count++;
-		printf("%s:\n", $2);
+		printf("%s:\n", $2); // The label for a procedure in the asm.
 
         temp->arguments = $3;
     }
@@ -232,8 +238,10 @@ variable: IDENT { $$ = sts_global_search(top_scope, $1); }
 procedure_statement: IDENT { $$ = stmt_gen_proc(sts_global_search(top_scope, $1), NULL); }
     | IDENT '(' expression_list ')'
     { 
+		// Debug print arguments of procedure
         /* print_tree_list($3); */
-        $$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3);
+        
+		$$ = stmt_gen_proc(sts_global_search(top_scope, $1), $3);
         tmp_tree_list = NULL;
     }
     ;
@@ -266,14 +274,30 @@ expression: simple_expression { $$ = $1; }
 
 simple_expression: term { $$ = $1; }
     | ADDOP term { $$ = gen_unaryop($1, $2); /* Did not get around to implementing */} 
-    | simple_expression ADDOP term { $$ = gen_binop($2, $1, $3); $1->side = S_LEFT; $3->side = S_RIGHT; $$->leaf = 0; }
+    | simple_expression ADDOP term
+	{ 
+		$$ = gen_binop($2, $1, $3);
+		$1->side = S_LEFT;
+		$3->side = S_RIGHT;
+		$$->leaf = 0;
+	}
     ;
 
 term: factor { $$ = $1; }
-    | term MULOP factor { $$ = gen_binop($2, $1, $3); $1->side = S_LEFT; $3->side = S_RIGHT; }
+    | term MULOP factor
+	{ 
+		$$ = gen_binop($2, $1, $3); 
+		$1->side = S_LEFT; 
+		$3->side = S_RIGHT; 
+	}
     ;
 
-factor: IDENT { $$ = gen_ident(sts_global_search(top_scope, $1)); $$->side = S_LEFT; $$->leaf = 1; }
+factor: IDENT
+	{ 
+		$$ = gen_ident(sts_global_search(top_scope, $1));
+		$$->side = S_LEFT;
+		$$->leaf = 1;
+	}
     | IDENT '(' expression_list ')' { $$ = gen_tree(); tmp_tree_list = NULL; /* Did not get around to implementing */ }
     | IDENT '[' expression ']' { $$ = gen_tree(); /* Did not get around to implementing */ }
     | INUM { $$ = gen_int($1); $$->leaf = 1; $$->side = S_LEFT; }
@@ -313,7 +337,8 @@ int main() {
     
 	top_scope = push_stack(top_scope, "main");
 
-	gen_code_io_strings();
+	// Gencode the strings used in read & write ("%s" and "%s\n")
+	/* gen_code_io_strings(); */
 
     yyparse();
 }

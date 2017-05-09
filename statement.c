@@ -112,30 +112,3 @@ void stmt_list_print(char* scope_name, statement_t *list, int offset) {
 	if(list->next != NULL)
 		stmt_list_print(scope_name, list->next, offset);
 }
-
-// Like stmt_list_print, but when it is being added to the list
-void print_stmt_add(statement_t *stmt) {
-	switch(stmt->type) {
-		case ST_ASSIGN:
-			printf("Assignment added\n");
-			printf("\t%s = %d\n", stmt->stmt.assign_stmt.ident->name, stmt->stmt.assign_stmt.tree->attribute.ival);
-			break;
-		case ST_IFTHENELSE:
-			printf("If-Then-Else added\n");
-			printf("\tIF: ");
-			print_stmt_add(stmt->stmt.if_then_else_stmt.if_stmt);
-			printf("\tElse: ");
-			print_stmt_add(stmt->stmt.if_then_else_stmt.else_stmt);
-			break;
-		case ST_WHILE:
-			printf("While added\n");
-			print_stmt_add(stmt->stmt.while_stmt.do_stmt);
-			break;
-		case ST_PROC:
-			printf("Procedure added\n");
-			break;
-	}
-
-	if(stmt->next != NULL)
-		print_stmt_add(stmt->next);
-}

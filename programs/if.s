@@ -13,8 +13,9 @@ main:
 	movq	%rax, -12(%rbp)
 	movq	$1, %rax
 	movq	%rax, -16(%rbp)
-	movq	-12(%rbp), %rax
-	cmp	-16(%rbp), %rax
+	movq	-16(%rbp), %rax
+	; cmp	-16(%rbp), %rax
+	cmp	-12(%rbp), %rax
 	jle .L2
 	movq	$7, %rax
 	movq	%rax, %rsi

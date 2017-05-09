@@ -7,12 +7,15 @@
 boo:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	$7, %rax
+	subq	$16, %rsp
+	movq	$4, %rax
+	movq	%rax, -8(%rbp)
+	movq	-8(%rbp), %rax
 	movq	%rax, %rsi
 	movq	$.LC0, %rdi
 	movq	$0, %rax
 	call	printf
-	popq	%rbp
+	leave
 	ret
 	.globl	main
 main:
